@@ -37,6 +37,31 @@ namespace restapi.Controllers
             }
         }
 
+        [HttpDelete("{id}")]
+        [Produces(ContentTypes.Timesheet)]
+        [ProducesResponseType(typeof(Timecard), 200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(typeof(InvalidStateError), 409)]
+        public IActionResult DEL(string id)
+        {
+            Timecard timecard = Database.Find(id);
+
+            if (timecard == null) 
+            {
+                return NotFound();
+            }
+            if (timecard.Status == TimecardStatus.Draft || timecard.Status == TimecardStatus.Cancelled )
+            {
+                Database.Del(timecard);
+                
+                return Ok(timecard);
+            }
+            else
+            {
+                return StatusCode(409, new InvalidStateError() { });
+            }
+        }
+
         [HttpPost]
         [Produces(ContentTypes.Timesheet)]
         [ProducesResponseType(typeof(Timecard), 200)]
@@ -100,7 +125,7 @@ namespace restapi.Controllers
                 return NotFound();
             }
         }
-        
+
         [HttpGet("{id}/transitions")]
         [Produces(ContentTypes.Transitions)]
         [ProducesResponseType(typeof(IEnumerable<Transition>), 200)]
